@@ -1,11 +1,9 @@
 #/usr/bin/python
 
-# naive implementation of a naive bayesian classifier for learning tic-tac-toe
+# naive implementation of a naive bayesian classifier for predicting the
+# outcome of a tic-tac-toe match given the game board
 # 2018-02-09
 # Shane Ryan
-
-
-import numpy as numpy
 
 
 # read in the tic-tac-toe board data and store as lines in a list
@@ -37,47 +35,50 @@ if len(training_data) != len(winning_boards) + len(losing_boards):
 # moves through the three rows.  each board position thus has a value for
 # indexing the training data correctly and two dictionaries to store win / loss
 
-training_data_frequencies = {'top_left' : [0, {'win':{'x' : 0, 'o' : 0, 'b' : 0},
-                                        'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+training_freqs = {'top_left' : [0, {'win':{'x' : 0, 'o' : 0, 'b' : 0},
+                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
 
-                            'top_center' : [1, {'win':{'x' : 0, 'o' : 0, 'b' : 0},
-                                          'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                'top_center' : [1, {'win':{'x' : 0, 'o' : 0, 'b' : 0},
+                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
 
-                            'top_right' : [2, {'win':{'x' : 0, 'o' : 0, 'b' : 0},
-                                         'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                'top_right' : [2, {'win':{'x' : 0, 'o' : 0, 'b' : 0},
+                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
 
-                            'middle_left' : [3, {'win':{'x' : 0, 'o' : 0, 'b' :0},
-                                           'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                'middle_left' : [3, {'win':{'x' : 0, 'o' : 0, 'b' :0},
+                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
 
-                            'middle_center' : [4, {'win':{'x' : 0, 'o' : 0,'b':0},
-                                             'loss':{'x' : 0, 'o' : 0, 'b': 0}}],
+                'middle_center' : [4, {'win':{'x' : 0, 'o' : 0,'b':0},
+                                    'loss':{'x' : 0, 'o' : 0, 'b': 0}}],
 
-                            'middle_right' : [5, {'win':{'x' : 0, 'o' : 0, 'b':0},
-                                            'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                'middle_right' : [5, {'win':{'x' : 0, 'o' : 0, 'b':0},
+                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
 
-                            'bottom_left' : [6, {'win':{'x' : 0, 'o' : 0, 'b' :0},
-                                            'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                'bottom_left' : [6, {'win':{'x' : 0, 'o' : 0, 'b' :0},
+                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
 
-                            'bottom_center' : [7, {'win':{'x' : 0, 'o' : 0,'b':0},
-                                             'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                'bottom_center' : [7, {'win':{'x' : 0, 'o' : 0,'b':0},
+                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
 
-                            'bottom_right' : [8, {'win':{'x' : 0, 'o' : 0, 'b':0},
-                                            'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
-                            }
+                'bottom_right' : [8, {'win':{'x' : 0, 'o' : 0, 'b':0},
+                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                }
+
 # populate winning frequencies
 for game_board in winning_boards:
-    for board_position in training_data_frequencies:
-        board_index = training_data_frequencies[board_position][0]
-        training_data_frequencies[board_position][1]['win'][game_board[board_index]] += 1
+    for board_position in training_freqs:
+        board_index = training_freqs[board_position][0]
+        training_freqs[board_position][1]['win'][game_board[board_index]] += 1
 
 # populate losing frequencies
 for game_board in losing_boards:
-    for board_position in training_data_frequencies:
-        board_index = training_data_frequencies[board_position][0]
-        training_data_frequencies[board_position][1]['loss'][game_board[board_index]] += 1
+    for board_position in training_freqs:
+        board_index = training_freqs[board_position][0]
+        training_freqs[board_position][1]['loss'][game_board[board_index]] += 1
 
+# calculate probabilities
 
-print(training_data_frequencies)
+for key in training_freqs:
+    print(training_freqs[key])
 
 
 
