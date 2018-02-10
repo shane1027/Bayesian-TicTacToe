@@ -7,14 +7,10 @@
 
 
 # function for calculating relevant probabilites given a board position
-def generate_probability(board_position):
+def generate_probability(board_position, probs):
     x=0
     o=1
     b=2   # constants for later indexing probability lists
-    probs = {'x':0, 'o':0, 'b':0,
-             'conditional-win': {'x':0, 'o':0, 'b':0},
-             'conditional-loss':{'x':0, 'o':0, 'b':0}}
-
     # frequency of each state occurring regardless of win / loss
     # followed by frequency of win occurring regardless of state
     # and loss ocurring regardless of state
@@ -33,7 +29,8 @@ def generate_probability(board_position):
 
     probs['x'] = state_freqs[x] / sum(state_freqs)
     probs['o'] = state_freqs[o] / sum(state_freqs)
-    probs['b'] = state_freqs[b] / sum(state_freqs)
+    if len(state_freqs) > 2:
+        probs['b'] = state_freqs[b] / sum(state_freqs)
 
     for state in probs['conditional-win']:
         probs['conditional-win'][state] = training_freqs[board_position][1][
@@ -72,19 +69,36 @@ def map_estimator(gameboard, probs, total_prob):
     for position in probs:
         index = probs[position]['index']
         print(gameboard[index])
-        est_pos *= probs[position]['conditional-win'][gameboard[index]]
-        est_neg *= probs[position]['conditional-loss'][gameboard[index]]
+        next_pos = probs[position]['conditional-win'][gameboard[index]]
+        print(next_pos)
+        est_pos *= next_pos / \
+                (probs[position]['conditional-win'][gameboard[index]]*\
+                    total_prob['win'] + \
+                 probs[position]['conditional-loss'][gameboard[index]]*\
+                    total_prob['loss'])
+        next_neg = probs[position]['conditional-loss'][gameboard[index]]
+        print(next_neg)
+        est_neg *= next_neg / \
+                (probs[position]['conditional-win'][gameboard[index]]*\
+                    total_prob['win'] + \
+                 probs[position]['conditional-loss'][gameboard[index]]*\
+                    total_prob['loss'])
 
-        print(est_pos)
-        print(est_neg)
+    print(est_neg)
+    print(est_pos)
 
     est_pos *= total_prob['win']
     est_neg *= total_prob['loss']
 
+    print(total_prob)
+
+    print(est_pos)
+    print(est_neg)
+
     if est_pos > est_neg:
-        return "positive"
+        return "y"
     elif est_pos < est_neg:
-        return "negative"
+        return "n"
     elif est_pos == est_neg:
         raise ValueError("Equally probable outcomes!")
         return
@@ -194,9 +208,25 @@ print(training_freqs)
 
 # calculate conditional probabilites for each board position
 state_prob = {}
+prob_num = 0
+probs1 = {'x':0, 'o':0, 'b':0,
+         'conditional-win': {'s':0, 'o':0, 'r':0},
+         'conditional-loss':{'s':0, 'o':0, 'r':0}}
+probs2 = {'x':0, 'o':0, 'b':0,
+         'conditional-win': {'h':0, 'm':0, 'c':0},
+         'conditional-loss':{'h':0, 'm':0, 'c':0}}
+probs3 = {'x':0, 'o':0, 'b':0,
+         'conditional-win': {'h':0, 'n':0},
+         'conditional-loss':{'h':0, 'n':0}}
+probs4 = {'x':0, 'o':0, 'b':0,
+         'conditional-win': {'t':0, 'f':0},
+         'conditional-loss':{'t':0, 'f':0}}
+list_probs = [probs1, probs2, probs3, probs4]
+
 for position in training_freqs:
-    state_prob[position] = generate_probability(position)
+    state_prob[position] = generate_probability(position, list_probs[prob_num])
     state_prob[position]['index'] = training_freqs[position][0]
+    prob_num += 1
 
 # add in the overall probability of win vs. loss
 total_prob = {}
@@ -205,8 +235,13 @@ total_prob['win'] = len(winning_boards) / (len(winning_boards) + \
 total_prob['loss'] = len(losing_boards) / (len(winning_boards) + \
         len(losing_boards))
 
-for line in state_prob:
-    print(state_prob[line])
+print(winning_boards)
+print(winning_boards)
+
+for position in state_prob:
+    for line in state_prob[position]['conditional-win']:
+        print(state_prob[position]['conditional-win'][line])
+        print(state_prob[position]['conditional-loss'][line])
 
 # now predict outcomes of the tic-tac-toe test situations given and report the
 # accurracy of the algorithm

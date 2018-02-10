@@ -14,3 +14,10 @@ is just this inaccurrate for the given tic-tac-toe case!
 --> ok, so the program successfully parses the training and test data for the weather attempt, and correctly sorts the occurrences of each piece of evidence into frequencies... (i.e. training_freqs is in agreement with a table I drew up on paper by hand)
 
 on to calculating conditional probs, then MAP for test data.
+
+
+---> ok!!  calculating conditional probabilities worked just fine. on to MAP...
+
+
+
+---> MAP works fine in the sense that it's math matches my hand calculations.. so I guess the algorithm works just fine and I should just place little faith in naive bayesian classifiers for this purpose given the small data set.
