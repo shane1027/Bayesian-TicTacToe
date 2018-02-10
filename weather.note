@@ -9,3 +9,8 @@ worked out by hand...
 
 then I can see if my code is making mistakes or if naive bayes classification
 is just this inaccurrate for the given tic-tac-toe case!
+
+
+--> ok, so the program successfully parses the training and test data for the weather attempt, and correctly sorts the occurrences of each piece of evidence into frequencies... (i.e. training_freqs is in agreement with a table I drew up on paper by hand)
+
+on to calculating conditional probs, then MAP for test data.

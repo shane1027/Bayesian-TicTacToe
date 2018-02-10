@@ -101,10 +101,11 @@ def parse_wins_losses(data):
     losing_boards = list()
 
     for game_board in data:
-        if "positive" in game_board:
-            winning_boards.append(game_board.replace(" ", "")[0:9])
-        elif "negative" in game_board:
-            losing_boards.append(game_board.replace(" ", "")[0:9])
+        shortened = game_board.replace(" ","")
+        if (shortened[4] == 'y'):
+            winning_boards.append(game_board.replace(" ", "")[0:4])
+        elif (shortened[4] == 'n'):
+            losing_boards.append(game_board.replace(" ", "")[0:4])
         else:
             raise ValueError("Training data is incomplete", game_board)
 
@@ -122,22 +123,24 @@ def parse_test_data(data):
     for line in data:
         scenario = list()
         shortened = line.replace(" ", "")
-        scenario.append(shortened[0:9])
-        scenario.append(shortened.rstrip()[9:])
+        scenario.append(shortened[0:4])
+        scenario.append(shortened.rstrip()[4:])
         outcomes.append(scenario)
     return outcomes
 
 ########################### program start #####################################
 
 # read in the tic-tac-toe board data and store as lines in a list
-training_data = read_data()
-test_data = parse_test_data(read_data("tic-tac-toe.test"))
+training_data = read_data("weather.data")
+test_data = parse_test_data(read_data("weather.test"))
 
 print(test_data)
 
 # parse wins / losses from training data
 winning_boards, losing_boards = parse_wins_losses(training_data)
 
+print(winning_boards)
+print(losing_boards)
 
 ## develop dictionary of key / val pairs for frequency tables
 
@@ -146,32 +149,32 @@ winning_boards, losing_boards = parse_wins_losses(training_data)
 # moves through the three rows.  each board position thus has a value for
 # indexing the training data correctly and two dictionaries to store win / loss
 
-training_freqs = {'top_left' : [0, {'win':{'x' : 0, 'o' : 0, 'b' : 0},
-                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+training_freqs = {'top_left' : [0, {'win':{'s' : 0, 'o' : 0, 'r' : 0},
+                                    'loss':{'s' : 0, 'o' : 0, 'r' : 0}}],
 
-                'top_center' : [1, {'win':{'x' : 0, 'o' : 0, 'b' : 0},
-                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                'top_center' : [1, {'win':{'h' : 0, 'm' : 0, 'c' : 0},
+                                    'loss':{'h' : 0, 'm' : 0, 'c' : 0}}],
 
-                'top_right' : [2, {'win':{'x' : 0, 'o' : 0, 'b' : 0},
-                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                'top_right' : [2, {'win':{'h' : 0, 'n' : 0},
+                                    'loss':{'h' : 0, 'n' : 0}}],
 
-                'middle_left' : [3, {'win':{'x' : 0, 'o' : 0, 'b' :0},
-                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+                'middle_left' : [3, {'win':{'f' : 0, 't' : 0},
+                                    'loss':{'f' : 0, 't' : 0}}],
 
-                'middle_center' : [4, {'win':{'x' : 0, 'o' : 0,'b':0},
-                                    'loss':{'x' : 0, 'o' : 0, 'b': 0}}],
-
-                'middle_right' : [5, {'win':{'x' : 0, 'o' : 0, 'b':0},
-                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
-
-                'bottom_left' : [6, {'win':{'x' : 0, 'o' : 0, 'b' :0},
-                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
-
-                'bottom_center' : [7, {'win':{'x' : 0, 'o' : 0,'b':0},
-                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
-
-                'bottom_right' : [8, {'win':{'x' : 0, 'o' : 0, 'b':0},
-                                    'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+#                 'middle_center' : [4, {'win':{'x' : 0, 'o' : 0,'b':0},
+#                                     'loss':{'x' : 0, 'o' : 0, 'b': 0}}],
+#
+#                 'middle_right' : [5, {'win':{'x' : 0, 'o' : 0, 'b':0},
+#                                     'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+#
+#                 'bottom_left' : [6, {'win':{'x' : 0, 'o' : 0, 'b' :0},
+#                                     'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+#
+#                 'bottom_center' : [7, {'win':{'x' : 0, 'o' : 0,'b':0},
+#                                     'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
+#
+#                 'bottom_right' : [8, {'win':{'x' : 0, 'o' : 0, 'b':0},
+#                                     'loss':{'x' : 0, 'o' : 0, 'b' : 0}}],
                 }
 
 
@@ -186,6 +189,8 @@ for game_board in losing_boards:
     for board_position in training_freqs:
         board_index = training_freqs[board_position][0]
         training_freqs[board_position][1]['loss'][game_board[board_index]] += 1
+
+print(training_freqs)
 
 # calculate conditional probabilites for each board position
 state_prob = {}
