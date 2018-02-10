@@ -5,6 +5,10 @@
 # 2018-02-09
 # Shane Ryan
 
+import plotly.plotly as py
+import plotly.graph_objs as go
+import tables
+import sys
 
 # function for calculating relevant probabilites given a board position
 def generate_probability(board_position):
@@ -72,14 +76,22 @@ def map_estimator(gameboard, probs, total_prob):
     for position in probs:
         index = probs[position]['index']
         print(gameboard[index])
-        est_pos *= probs[position]['conditional-win'][gameboard[index]]
-        est_neg *= probs[position]['conditional-loss'][gameboard[index]]
 
-        print(est_pos)
-        print(est_neg)
+        denominator = (probs[position]['conditional-win'][gameboard[index]] * \
+                total_prob['win'] + \
+                probs[position]['conditional-loss'][gameboard[index]] * \
+                total_prob['loss'])
+
+        est_pos *= probs[position]['conditional-win'][gameboard[index]] / \
+            denominator
+        est_neg *= probs[position]['conditional-loss'][gameboard[index]] / \
+            denominator
 
     est_pos *= total_prob['win']
     est_neg *= total_prob['loss']
+
+    print(est_pos)
+    print(est_neg)
 
     if est_pos > est_neg:
         return "positive"
@@ -92,6 +104,31 @@ def map_estimator(gameboard, probs, total_prob):
         raise ValueError("Error finding MAP estimator")
         return
 
+
+# generate a frequency table to display conditional probabilites
+def gen_frequency_table(prob_data):
+
+    headings = ['Position', 'P(X|Pos)', 'P(O|Pos)', 'P(B|Pos)',
+                'P(X|Neg)', 'P(O|Neg)', 'P(B|Neg)']
+
+    data = list()
+    for position in prob_data:
+        data.append(
+                [position, round(prob_data[position]['conditional-win']['x'],4),
+                    round(prob_data[position]['conditional-win']['o'],4),
+                    round(prob_data[position]['conditional-win']['b'],4),
+                    round(prob_data[position]['conditional-loss']['x'],4),
+                    round(prob_data[position]['conditional-loss']['o'],4),
+                    round(prob_data[position]['conditional-loss']['b'],4),
+                    ]
+                )
+
+    fields = [0, 1, 2, 3, 4, 5, 6]
+
+    align = [('^', '<'), ('^', '^'), ('^', '<'), ('^', '^'), ('^', '>'),
+	     ('^','^'), ('^','^')]
+
+    tables.table(sys.stdout, data, fields, headings, align)
 
 # parse training data, separating each game into wins vs losses, removing
 # spaces in data and storing only the nine values corresponding to state of
@@ -126,6 +163,8 @@ def parse_test_data(data):
         scenario.append(shortened.rstrip()[9:])
         outcomes.append(scenario)
     return outcomes
+
+
 
 ########################### program start #####################################
 
@@ -218,5 +257,5 @@ for gameboard, outcome in test_data:
         failure += 1
 
 print("Successes: {}\nFailures: {}".format(success, failure))
-
+gen_frequency_table(state_prob)
 
