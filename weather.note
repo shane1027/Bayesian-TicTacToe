@@ -1,0 +1,11 @@
+## OK....
+
+# after implementing the algorithm in a way I would expect to work, I am only
+# receiving correct results 1/3 of the time...
+
+Therefore to help debug, I will try run the program against a simple collection
+of weather data whose conditional probabilities and MAP estimators can be
+worked out by hand...
+
+then I can see if my code is making mistakes or if naive bayes classification
+is just this inaccurrate for the given tic-tac-toe case!
