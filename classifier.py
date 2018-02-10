@@ -12,8 +12,8 @@ def generate_probability(board_position):
     o=1
     b=2   # constants for later indexing probability lists
     probs = {'x':0, 'o':0, 'b':0,
-             'x-given-win':0, 'o-given-win':0, 'b-given-win':0,
-             'x-given-loss':0, 'o-given-loss':0, 'b-given-loss':0}
+             'conditional-win': {'x':0, 'o':0, 'b':0},
+             'conditional-loss':{'x':0, 'o':0, 'b':0}}
 
     # frequency of each state occurring regardless of win / loss
     # followed by frequency of win occurring regardless of state
@@ -35,56 +35,112 @@ def generate_probability(board_position):
     probs['o'] = state_freqs[o] / sum(state_freqs)
     probs['b'] = state_freqs[b] / sum(state_freqs)
 
-    probs['x-given-win'] = training_freqs[board_position][1]['win']['x'] \
-            / wins
-    probs['x-given-loss'] = training_freqs[board_position][1]['loss']['x'] \
-            / losses
-    probs['o-given-win'] = training_freqs[board_position][1]['win']['o'] \
-            / wins
-    probs['o-given-loss'] = training_freqs[board_position][1]['loss']['o'] \
-            / losses
-    probs['b-given-win'] = training_freqs[board_position][1]['win']['b'] \
-            / wins
-    probs['b-given-loss'] = training_freqs[board_position][1]['loss']['b'] \
-            / losses
+    for state in probs['conditional-win']:
+        probs['conditional-win'][state] = training_freqs[board_position][1][
+                'win'][state] / wins
+        probs['conditional-loss'][state] = training_freqs[board_position][1][
+                'loss'][state] / losses
 
     # basic checks to verify probabilities add up to 1
-    #print(probs)
-    #print(probs['x-given-win'] + probs['o-given-win'] + probs['b-given-win'])
-    #print(probs['x-given-loss'] + probs['o-given-loss'] + probs['b-given-loss'])
-    #print(probs['x'] + probs['o'] + probs['b'])
+
+    # print(probs)
+    # print(probs['conditional-win']['x'] + \
+        # probs['conditional-win']['o'] + probs['conditional-win']['b'])
+    # print(probs['conditional-loss']['x'] + probs['conditional-loss']['o'] + \
+        # probs['conditional-loss']['b'])
+    # print(probs['x'] + probs['o'] + probs['b'])
     ## i would leave this as a programmatic check, but sometimes rounding sets
     ## off false positives, i.e. probs. summing to 0.99
 
     return probs
 
 
-# read in the tic-tac-toe board data and store as lines in a list
-training_data = list()
-with open("tic-tac-toe.data", "r") as training_data_file:
-    for line in training_data_file:
-        training_data.append(line)
+def read_data(file_name = "tic-tac-toe.data"):
+    data = list()
+    with open(file_name, "r") as open_file:
+        for line in open_file:
+            data.append(line)
+    return data
+
+
+# function to calculate the most probable game outcome given the board and
+# calculated probabilities from training data
+def map_estimator(gameboard, probs, total_prob):
+    est_pos = 1;
+    est_neg = 1;
+
+    for position in probs:
+        index = probs[position]['index']
+        print(gameboard[index])
+        est_pos *= probs[position]['conditional-win'][gameboard[index]]
+        est_neg *= probs[position]['conditional-loss'][gameboard[index]]
+
+        print(est_pos)
+        print(est_neg)
+
+    est_pos *= total_prob['win']
+    est_neg *= total_prob['loss']
+
+    if est_pos > est_neg:
+        return "positive"
+    elif est_pos < est_neg:
+        return "negative"
+    elif est_pos == est_neg:
+        raise ValueError("Equally probable outcomes!")
+        return
+    else:
+        raise ValueError("Error finding MAP estimator")
+        return
 
 
 # parse training data, separating each game into wins vs losses, removing
 # spaces in data and storing only the nine values corresponding to state of
 # top left, top center, top right, etc.
-winning_boards = list()
-losing_boards = list()
-for game_board in training_data:
-    if "positive" in game_board:
-        winning_boards.append(game_board.replace(" ", "")[0:9])
-    elif "negative" in game_board:
-        losing_boards.append(game_board.replace(" ", "")[0:9])
-    else:
-        raise ValueError("Training data is incomplete", game_board)
+def parse_wins_losses(data):
+    winning_boards = list()
+    losing_boards = list()
+
+    for game_board in data:
+        if "positive" in game_board:
+            winning_boards.append(game_board.replace(" ", "")[0:9])
+        elif "negative" in game_board:
+            losing_boards.append(game_board.replace(" ", "")[0:9])
+        else:
+            raise ValueError("Training data is incomplete", game_board)
+
+    # verifying that all game boards are sorted
+    if len(training_data) != len(winning_boards) + len(losing_boards):
+        raise ValueError("Training data not completely sorted")
+
+    return winning_boards, losing_boards
 
 
-# verifying that all game boards are sorted
-if len(training_data) != len(winning_boards) + len(losing_boards):
-    raise ValueError("Training data not completely sorted")
+# parse the test data, returning a list of lists to separate the gameboard from
+# the expected outcome
+def parse_test_data(data):
+    outcomes = list()
+    for line in data:
+        scenario = list()
+        shortened = line.replace(" ", "")
+        scenario.append(shortened[0:9])
+        scenario.append(shortened.rstrip()[9:])
+        outcomes.append(scenario)
+    return outcomes
+
+########################### program start #####################################
+
+# read in the tic-tac-toe board data and store as lines in a list
+training_data = read_data()
+test_data = parse_test_data(read_data("tic-tac-toe.test"))
+
+print(test_data)
+
+# parse wins / losses from training data
+winning_boards, losing_boards = parse_wins_losses(training_data)
+
 
 ## develop dictionary of key / val pairs for frequency tables
+
 # each position on the table has a corresponding location in the training data.
 # in this case, our training data starts at the top left of the board, and
 # moves through the three rows.  each board position thus has a value for
@@ -132,13 +188,35 @@ for game_board in losing_boards:
         training_freqs[board_position][1]['loss'][game_board[board_index]] += 1
 
 # calculate conditional probabilites for each board position
-state_probs = {}
+state_prob = {}
 for position in training_freqs:
-    state_probs[position] = generate_probability(position)
+    state_prob[position] = generate_probability(position)
+    state_prob[position]['index'] = training_freqs[position][0]
 
 # add in the overall probability of win vs. loss
-state_probs['win'] = len(winning_boards) / (len(winning_boards) + \
+total_prob = {}
+total_prob['win'] = len(winning_boards) / (len(winning_boards) + \
         len(losing_boards))
-state_probs['loss'] = len(losing_boards) / (len(winning_boards) + \
+total_prob['loss'] = len(losing_boards) / (len(winning_boards) + \
         len(losing_boards))
+
+for line in state_prob:
+    print(state_prob[line])
+
+# now predict outcomes of the tic-tac-toe test situations given and report the
+# accurracy of the algorithm
+success = 0
+failure = 0
+for gameboard, outcome in test_data:
+    estimation = map_estimator(gameboard, state_prob, total_prob)
+    # print("Expected: {}\nCalculated: {}\n\n".format(outcome, estimation))
+    if outcome == estimation:
+        print("Test successful!")
+        success += 1
+    else:
+        print("Test Failed :(")
+        failure += 1
+
+print("Successes: {}\nFailures: {}".format(success, failure))
+
 
