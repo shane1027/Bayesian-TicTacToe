@@ -5,8 +5,6 @@
 # 2018-02-09
 # Shane Ryan
 
-import plotly.plotly as py
-import plotly.graph_objs as go
 import tables
 import sys
 
